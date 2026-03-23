@@ -8,8 +8,8 @@ interface ArtworkProps {
   data: ArtworkData;
 }
 
-const MODEL_LOAD_DISTANCE = 11;
-const MODEL_UNLOAD_DISTANCE = 15;
+const MODEL_LOAD_DISTANCE = 5.5;
+const MODEL_UNLOAD_DISTANCE = 7;
 
 function PortalRoom({ showPedestal }: { showPedestal: boolean }) {
   return (

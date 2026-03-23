@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gallery3D - Presentation</title>
+    <style>
+      :root {
+        --bg-0: #06090f;
+        --bg-1: #0f1524;
+        --bg-2: #1b2844;
+        --panel: rgba(13, 19, 34, 0.82);
+        --panel-border: rgba(143, 178, 255, 0.22);
+        --text-strong: #f7f9ff;
+        --text-muted: #afbad6;
+        --accent-1: #4cc9f0;
+        --accent-2: #7c7bff;
+        --accent-3: #38d39f;
+        --danger: #ff6b6b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, #1d355e 0%, transparent 35%),
+          radial-gradient(circle at 85% 85%, #1a4b45 0%, transparent 38%),
+          linear-gradient(145deg, var(--bg-0), var(--bg-1) 45%, #0f1a31 100%);
+        color: var(--text-strong);
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .presentation-wrapper {
+        position: relative;
+        width: min(1280px, 100%);
+        aspect-ratio: 16 / 9;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid var(--panel-border);
+        background:
+          linear-gradient(135deg, rgba(124, 123, 255, 0.16), transparent 35%),
+          linear-gradient(315deg, rgba(76, 201, 240, 0.16), transparent 35%),
+          var(--panel);
+        backdrop-filter: blur(12px);
+        box-shadow:
+          0 30px 80px rgba(3, 8, 20, 0.6),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+
+      .progress-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.07);
+        z-index: 30;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 25%;
+        background: linear-gradient(
+          90deg,
+          var(--accent-1),
+          var(--accent-2),
+          var(--accent-3)
+        );
+        transition: width 220ms ease;
+      }
+
+      .grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        mask-image: radial-gradient(circle at center, black 38%, transparent 100%);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .slide-container {
+        position: absolute;
+        inset: 0;
+        padding: 72px 84px 120px;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(14px);
+        transition:
+          opacity 250ms ease,
+          transform 250ms ease;
+        z-index: 10;
+      }
+
+      .slide-container.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+
+      .kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--accent-1);
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      h1 {
+        font-size: clamp(52px, 7vw, 94px);
+        line-height: 0.95;
+        margin-bottom: 22px;
+      }
+
+      h2 {
+        font-size: clamp(36px, 4.4vw, 56px);
+        margin-bottom: 32px;
+      }
+
+      .lead {
+        max-width: 820px;
+        color: var(--text-muted);
+        font-size: clamp(20px, 2.1vw, 29px);
+        line-height: 1.5;
+      }
+
+      .title-slide {
+        justify-content: center;
+      }
+
+      .title-slide .hero-badge {
+        width: fit-content;
+        margin-top: 40px;
+        padding: 9px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 123, 255, 0.4);
+        background: rgba(124, 123, 255, 0.16);
+        color: #d9deff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .section-subtitle {
+        font-size: 22px;
+        color: #c7d3f2;
+        margin: 0 0 28px;
+      }
+
+      .feature-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .feature-list li {
+        padding: 20px 24px;
+        border-radius: 16px;
+        border: 1px solid rgba(143, 178, 255, 0.22);
+        background: rgba(17, 27, 49, 0.55);
+        color: var(--text-muted);
+        line-height: 1.5;
+        font-size: 22px;
+      }
+
+      .feature-list strong {
+        color: var(--text-strong);
+      }
+
+      .image-slide {
+        justify-content: flex-start;
+      }
+
+      .shot-frame {
+        margin-top: 8px;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(143, 178, 255, 0.25);
+        background: rgba(9, 14, 27, 0.75);
+      }
+
+      .shot-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .controls {
+        position: absolute;
+        left: 50%;
+        bottom: 28px;
+        transform: translateX(-50%);
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(8, 12, 22, 0.88);
+        border: 1px solid rgba(143, 178, 255, 0.26);
+        backdrop-filter: blur(8px);
+      }
+
+      .nav-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        background: transparent;
+        color: #eaf0ff;
+        cursor: pointer;
+        transition: background-color 180ms ease;
+      }
+
+      .nav-btn:hover:not(:disabled) {
+        background: rgba(124, 123, 255, 0.24);
+      }
+
+      .nav-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .page-indicator {
+        min-width: 72px;
+        text-align: center;
+        font-size: 13px;
+        color: #c9d4f3;
+        padding: 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="presentation-wrapper">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="grid-overlay"></div>
+
+      <section class="slide-container title-slide active" id="slide-0">
+        <p class="kicker">Experience 3D interactive</p>
+        <h1>Gallery3D</h1>
+        <p class="lead">
+          Une application web qui transforme le navigateur en espace
+          d&apos;exposition immersif, fluide et accessible.
+        </p>
+        <div class="hero-badge">Concept &amp; Realisation Technique</div>
+      </section>
+
+      <section class="slide-container" id="slide-1">
+        <p class="kicker">Architecture</p>
+        <h2>Frontend</h2>
+        <p class="section-subtitle">Une scene 3D rapide, lisible et reactive</p>
+        <ul class="feature-list">
+          <li>
+            <strong>Three.js + React :</strong> rendu temps reel et navigation
+            naturelle dans la galerie virtuelle.
+          </li>
+          <li>
+            <strong>Performance :</strong> scene optimisee pour conserver une
+            exploration fluide meme avec des textures lourdes.
+          </li>
+          <li>
+            <strong>Accessibilite web :</strong> aucun client a installer, un
+            simple lien suffit.
+          </li>
+        </ul>
+      </section>
+
+      <section class="slide-container" id="slide-2">
+        <p class="kicker">Infrastructure</p>
+        <h2>Backend</h2>
+        <p class="section-subtitle">API fiable et donnees evolutives</p>
+        <ul class="feature-list">
+          <li>
+            <strong>Node.js :</strong> service rapide pour la gestion des flux
+            entre client et base.
+          </li>
+          <li>
+            <strong>Prisma :</strong> couche ORM propre pour manipuler les
+            donnees en securite.
+          </li>
+          <li>
+            <strong>MongoDB :</strong> structure flexible pour stocker les
+            oeuvres et leurs metadonnees.
+          </li>
+        </ul>
+      </section>
+
+      <section class="slide-container image-slide" id="slide-3">
+        <p class="kicker">Demo visuelle</p>
+        <h2>Capture d&apos;&eacute;cran de l&apos;application</h2>
+        <div class="shot-frame">
+          <img
+            src="./screencapture-localhost-3000-2026-03-23-12_26_58.png"
+            alt="Capture de l'application Gallery3D"
+          />
+        </div>
+      </section>
+
+      <div class="controls">
+        <button class="nav-btn" id="prevBtn" disabled>&larr; Precedent</button>
+        <div class="page-indicator" id="indicator">1 / 4</div>
+        <button class="nav-btn" id="nextBtn">Suivant &rarr;</button>
+      </div>
+    </div>
+
+    <script>
+      const slides = document.querySelectorAll(".slide-container");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const indicator = document.getElementById("indicator");
+      const progressFill = document.getElementById("progressFill");
+      let currentSlide = 0;
+
+      function updateSlides() {
+        slides.forEach((slide, index) => {
+          slide.classList.toggle("active", index === currentSlide);
+        });
+
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === slides.length - 1;
+        indicator.textContent = `${currentSlide + 1} / ${slides.length}`;
+        progressFill.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+      }
+
+      prevBtn.addEventListener("click", () => {
+        if (currentSlide > 0) {
+          currentSlide -= 1;
+          updateSlides();
+        }
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (currentSlide < slides.length - 1) {
+          currentSlide += 1;
+          updateSlides();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" && currentSlide < slides.length - 1) {
+          currentSlide += 1;
+          updateSlides();
+        }
+
+        if (event.key === "ArrowLeft" && currentSlide > 0) {
+          currentSlide -= 1;
+          updateSlides();
+        }
+      });
+
+      updateSlides();
+    </script>
+  </body>
+</html>
