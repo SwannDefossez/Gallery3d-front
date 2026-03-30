@@ -1,12 +1,7 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { Canvas } from "@react-three/fiber";
-import { Gallery } from "./components/Gallery";
-import { UIOverlay } from "./components/UIOverlay";
-import { Suspense } from "react";
+import { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Gallery } from './components/Gallery';
+import { UIOverlay } from './components/UIOverlay';
 
 export default function App() {
   return (
@@ -17,7 +12,7 @@ export default function App() {
         dpr={[1, 1.5]}
         performance={{ min: 0.5 }}
         camera={{ position: [0, 1.6, 0], fov: 60 }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Suspense fallback={null}>
           <Gallery />

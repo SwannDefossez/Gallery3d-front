@@ -4,6 +4,7 @@ export interface ArtworkData {
   id: string;
   title: string;
   artist: string;
+  description?: string;
   price: number;
   imageUrl: string;
   modelUrl: string;
@@ -21,6 +22,8 @@ export interface ArtworkData {
 }
 
 interface GalleryState {
+  hasStarted: boolean;
+  setHasStarted: (started: boolean) => void;
   isLocked: boolean;
   setLocked: (locked: boolean) => void;
   hoveredArtwork: ArtworkData | null;
@@ -35,6 +38,8 @@ interface GalleryState {
 }
 
 export const useGalleryStore = create<GalleryState>((set) => ({
+  hasStarted: false,
+  setHasStarted: (started) => set({ hasStarted: started }),
   isLocked: false,
   setLocked: (locked) => set({ isLocked: locked }),
   hoveredArtwork: null,
@@ -42,11 +47,15 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   selectedArtwork: null,
   setSelectedArtwork: (artwork) => set({ selectedArtwork: artwork }),
   cart: [],
-  addToCart: (artwork) => set((state) => {
-    if (state.cart.find(item => item.id === artwork.id)) return state;
-    return { cart: [...state.cart, artwork] };
-  }),
-  removeFromCart: (id) => set((state) => ({ cart: state.cart.filter(item => item.id !== id) })),
+  addToCart: (artwork) =>
+    set((state) => {
+      if (state.cart.some((item) => item.id === artwork.id)) {
+        return state;
+      }
+
+      return { cart: [...state.cart, artwork] };
+    }),
+  removeFromCart: (id) => set((state) => ({ cart: state.cart.filter((item) => item.id !== id) })),
   isCartOpen: false,
   setCartOpen: (open) => set({ isCartOpen: open }),
 }));
