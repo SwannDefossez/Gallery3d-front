@@ -100,11 +100,11 @@ const extensionSlots: ExtensionSlot[] = [
       modelRotation: [0, 2.75, 0],
     },
     left: {
-      title: 'Tacos',
+      title: 'Terminal Aerien Moderne',
       artist: 'Modele importe',
       description:
-        'Scene importee plus legere que le temple precedent, utilisee ici comme environnement immersif texture pour stabiliser la galerie.',
-      modelUrl: '/assets/models/tacos.glb',
+        'Terminal aerien moderne importe comme environnement complet, avec textures integrees et une lecture architecturale plus nette que la version precedente.',
+      modelUrl: '/assets/models/terminal-aerien-moderne.glb',
       imageUrl: '/assets/previews/terminal-aerien-moderne-preview.jpg',
       isEnvironment: true,
       environmentScaleMultiplier: 3,
@@ -177,7 +177,7 @@ export function Gallery() {
   return (
     <>
       <color attach="background" args={['#050505']} />
-      <fog attach="fog" args={['#17091f', 25, 260]} />
+      <fog attach="fog" args={['#17091f', 25, 400]} />
       <ambientLight intensity={0.3} />
       <directionalLight
         position={[10, 12, 5]}
@@ -200,6 +200,7 @@ export function Gallery() {
       {artworks.map((artwork) => (
         <Artwork key={artwork.id} data={artwork} />
       ))}
+
     </>
   );
 }

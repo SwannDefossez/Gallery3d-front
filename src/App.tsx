@@ -1,13 +1,18 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Gallery } from './components/Gallery';
+import { RichardsGalleryScene } from './components/RichardsGalleryScene';
 import { UIOverlay } from './components/UIOverlay';
+import { useGalleryStore } from './store';
 
 export default function App() {
+  const selectedMap = useGalleryStore((s) => s.selectedMap);
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-black font-sans">
       <UIOverlay />
       <Canvas
+        id="scene-canvas"
         shadows
         dpr={[1, 1.5]}
         performance={{ min: 0.5 }}
@@ -15,7 +20,8 @@ export default function App() {
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Suspense fallback={null}>
-          <Gallery />
+          {selectedMap === 'gallery' && <Gallery />}
+          {selectedMap === 'richards' && <RichardsGalleryScene />}
         </Suspense>
       </Canvas>
     </div>
