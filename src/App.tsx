@@ -1,13 +1,9 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Gallery } from './components/Gallery';
-import { RichardsGalleryScene } from './components/RichardsGalleryScene';
+import { MainGalleryScene } from './components/MainGalleryScene';
 import { UIOverlay } from './components/UIOverlay';
-import { useGalleryStore } from './store';
 
 export default function App() {
-  const selectedMap = useGalleryStore((s) => s.selectedMap);
-
   return (
     <div className="h-screen w-screen overflow-hidden bg-black font-sans">
       <UIOverlay />
@@ -20,8 +16,7 @@ export default function App() {
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Suspense fallback={null}>
-          {selectedMap === 'gallery' && <Gallery />}
-          {selectedMap === 'richards' && <RichardsGalleryScene />}
+          <MainGalleryScene />
         </Suspense>
       </Canvas>
     </div>

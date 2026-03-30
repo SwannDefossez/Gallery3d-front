@@ -3,39 +3,9 @@ import { Canvas } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, ShoppingCart, X } from 'lucide-react';
 import * as THREE from 'three';
-import { useGalleryStore, type ArtworkData, type MapId } from '../store';
+import { useGalleryStore, type ArtworkData } from '../store';
 
-const MAPS: {
-  id: MapId;
-  name: string;
-  subtitle: string;
-  description: string;
-  badge: string;
-  accent: string;
-  bg: string;
-  thumb: string;
-}[] = [
-  {
-    id: 'gallery',
-    name: 'Galerie Contemporaine',
-    subtitle: 'Style Futuriste',
-    description: 'Plateforme suspendue dans le vide cosmique. Portails 3D interactifs, villes virtuelles et mondes fantastiques.',
-    badge: 'Original',
-    accent: '#a855f7',
-    bg: 'linear-gradient(135deg, #0d0018 0%, #1a0730 50%, #0d0018 100%)',
-    thumb: 'https://images.unsplash.com/photo-1558865869-c93f6f8482af?w=600&q=80',
-  },
-  {
-    id: 'richards',
-    name: 'Richards Art Gallery',
-    subtitle: 'Galerie Importee',
-    description: 'Salle 3D issue du GLB a la racine du projet, chargee comme environnement complet pour accueillir tes oeuvres ensuite.',
-    badge: 'Nouveau',
-    accent: '#c8920a',
-    bg: 'linear-gradient(135deg, #17120b 0%, #2c2113 50%, #17120b 100%)',
-    thumb: '/image.png',
-  },
-];
+const MAIN_GALLERY_PREVIEW_URL = '/assets/previews/main-gallery-preview.png';
 
 type NumericFieldProps = {
   label: string;
@@ -179,8 +149,6 @@ function ArtworkModalViewer({ artwork }: { artwork: ArtworkData }) {
 }
 
 export function UIOverlay() {
-  const selectedMap = useGalleryStore((s) => s.selectedMap);
-  const setSelectedMap = useGalleryStore((s) => s.setSelectedMap);
   const hasStarted = useGalleryStore((s) => s.hasStarted);
   const setHasStarted = useGalleryStore((s) => s.setHasStarted);
   const isLocked = useGalleryStore((s) => s.isLocked);
@@ -195,27 +163,26 @@ export function UIOverlay() {
   const isEditorMode = useGalleryStore((s) => s.isEditorMode);
   const setEditorMode = useGalleryStore((s) => s.setEditorMode);
   const editorCamera = useGalleryStore((s) => s.editorCamera);
-  const richardsHoverHint = useGalleryStore((s) => s.richardsHoverHint);
-  const richardsSurfaceTuning = useGalleryStore((s) => s.richardsSurfaceTuning);
-  const setRichardsSurfaceTuning = useGalleryStore((s) => s.setRichardsSurfaceTuning);
-  const richardsWorldTuning = useGalleryStore((s) => s.richardsWorldTuning);
-  const setRichardsWorldTuning = useGalleryStore((s) => s.setRichardsWorldTuning);
-  const richardsFloorTuning = useGalleryStore((s) => s.richardsFloorTuning);
-  const setRichardsFloorTuning = useGalleryStore((s) => s.setRichardsFloorTuning);
-  const richardsInfernoEnabled = useGalleryStore((s) => s.richardsInfernoEnabled);
-  const resetRichardsTuning = useGalleryStore((s) => s.resetRichardsTuning);
+  const galleryHoverHint = useGalleryStore((s) => s.galleryHoverHint);
+  const portalSurfaceTuning = useGalleryStore((s) => s.portalSurfaceTuning);
+  const setPortalSurfaceTuning = useGalleryStore((s) => s.setPortalSurfaceTuning);
+  const portalWorldTuning = useGalleryStore((s) => s.portalWorldTuning);
+  const setPortalWorldTuning = useGalleryStore((s) => s.setPortalWorldTuning);
+  const galleryFloorTuning = useGalleryStore((s) => s.galleryFloorTuning);
+  const setGalleryFloorTuning = useGalleryStore((s) => s.setGalleryFloorTuning);
+  const infernoPortalEnabled = useGalleryStore((s) => s.infernoPortalEnabled);
+  const resetGalleryTuning = useGalleryStore((s) => s.resetGalleryTuning);
   const [presetStatus, setPresetStatus] = useState('');
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  const suppressResumeOverlay = selectedMap === 'richards' && isEditorMode;
+  const suppressResumeOverlay = isEditorMode;
   const showOverlay = !isLocked && !isCartOpen && !selectedArtwork && !suppressResumeOverlay;
-  const isMapSelection = showOverlay && !selectedMap;
-  const isEnterOverlay = showOverlay && !!selectedMap && !hasStarted;
-  const isResumeOverlay = showOverlay && !!selectedMap && hasStarted;
+  const isEnterOverlay = showOverlay && !hasStarted;
+  const isResumeOverlay = showOverlay && hasStarted;
 
   const description = selectedArtwork
     ? selectedArtwork.description ??
-      `Cette oeuvre remarquable de ${selectedArtwork.artist} capture une presence immersive adaptee a la galerie contemporaine.`
+      `Cette oeuvre remarquable de ${selectedArtwork.artist} capture une presence immersive adaptee a la galerie principale.`
     : '';
 
   const closeCart = () => setCartOpen(false);
@@ -237,20 +204,8 @@ export function UIOverlay() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isCartOpen]);
 
-  useEffect(() => {
-    if (selectedMap !== 'richards' && isEditorMode) {
-      setEditorMode(false);
-    }
-  }, [selectedMap, isEditorMode, setEditorMode]);
-
-  const handleSelectMap = (id: MapId) => {
-    setSelectedMap(id);
-    setHasStarted(true);
-    setEditorMode(false);
-  };
-
   const updateSurfaceVector = (key: 'scale' | 'offsetLocal' | 'rotationOffsetDeg', index: number, value: number) => {
-    setRichardsSurfaceTuning((prev) => {
+    setPortalSurfaceTuning((prev) => {
       const next = [...prev[key]] as [number, number, number];
       next[index] = value;
       return { ...prev, [key]: next };
@@ -258,7 +213,7 @@ export function UIOverlay() {
   };
 
   const updateWorldVector = (key: 'position' | 'rotation', index: number, value: number) => {
-    setRichardsWorldTuning((prev) => {
+    setPortalWorldTuning((prev) => {
       const next = [...prev[key]] as [number, number, number];
       next[index] = value;
       return { ...prev, [key]: next };
@@ -266,64 +221,61 @@ export function UIOverlay() {
   };
 
   const updateFloorVector = (key: 'repeat' | 'offset', index: number, value: number) => {
-    setRichardsFloorTuning((prev) => {
+    setGalleryFloorTuning((prev) => {
       const next = [...prev[key]] as [number, number];
       next[index] = value;
       return { ...prev, [key]: next };
     });
   };
 
-  const richardsPresetSnippet = `export const DEFAULT_RICHARDS_SURFACE_TUNING = {
-  scale: ${formatPresetVector(richardsSurfaceTuning.scale)},
-  offsetLocal: ${formatPresetVector(richardsSurfaceTuning.offsetLocal)},
-  rotationOffsetDeg: ${formatPresetVector(richardsSurfaceTuning.rotationOffsetDeg)},
+  const galleryPresetSnippet = `export const DEFAULT_PORTAL_SURFACE_TUNING = {
+  scale: ${formatPresetVector(portalSurfaceTuning.scale)},
+  offsetLocal: ${formatPresetVector(portalSurfaceTuning.offsetLocal)},
+  rotationOffsetDeg: ${formatPresetVector(portalSurfaceTuning.rotationOffsetDeg)},
 };
 
-export const DEFAULT_RICHARDS_WORLD_TUNING = {
-  scaleMultiplier: ${formatPresetNumber(richardsWorldTuning.scaleMultiplier)},
-  position: ${formatPresetVector(richardsWorldTuning.position)},
-  rotation: ${formatPresetVector(richardsWorldTuning.rotation)},
+export const DEFAULT_PORTAL_WORLD_TUNING = {
+  scaleMultiplier: ${formatPresetNumber(portalWorldTuning.scaleMultiplier)},
+  position: ${formatPresetVector(portalWorldTuning.position)},
+  rotation: ${formatPresetVector(portalWorldTuning.rotation)},
 };
 
-export const DEFAULT_RICHARDS_FLOOR_TUNING = {
-  repeat: [${formatPresetNumber(richardsFloorTuning.repeat[0])}, ${formatPresetNumber(richardsFloorTuning.repeat[1])}],
-  offset: [${formatPresetNumber(richardsFloorTuning.offset[0])}, ${formatPresetNumber(richardsFloorTuning.offset[1])}],
-  rotationDeg: ${formatPresetNumber(richardsFloorTuning.rotationDeg)},
-  normalScale: ${formatPresetNumber(richardsFloorTuning.normalScale)},
+export const DEFAULT_GALLERY_FLOOR_TUNING = {
+  repeat: [${formatPresetNumber(galleryFloorTuning.repeat[0])}, ${formatPresetNumber(galleryFloorTuning.repeat[1])}],
+  offset: [${formatPresetNumber(galleryFloorTuning.offset[0])}, ${formatPresetNumber(galleryFloorTuning.offset[1])}],
+  rotationDeg: ${formatPresetNumber(galleryFloorTuning.rotationDeg)},
+  normalScale: ${formatPresetNumber(galleryFloorTuning.normalScale)},
 };
 
-export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
+export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};`;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6">
       <div className="relative z-10 flex items-start justify-between">
         <div className="text-white">
-          <h1 className="text-2xl font-bold tracking-tighter">Gallerie3d</h1>
-          {selectedMap && (
-            <p className="text-sm text-gray-400">
-              {selectedMap === 'richards' && isEditorMode
-                ? 'Mode edition: ZQSD avancer, Espace monter, Shift descendre, Tab pour liberer la souris, cliquez pour regarder'
-                : 'ZQSD pour se deplacer · Espace pour sauter · Cliquez pour regarder'}
-            </p>
-          )}
+          <h1 className="text-2xl font-bold tracking-tighter">Gallery3d</h1>
+          <p className="text-sm text-gray-400">
+            {isEditorMode
+              ? 'Mode edition: ZQSD avancer, Espace monter, Shift descendre, Tab pour liberer la souris, cliquez pour regarder'
+              : 'ZQSD pour se deplacer - Espace pour sauter - Cliquez pour regarder'}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {selectedMap && (
+          {hasStarted && (
             <button
               className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white backdrop-blur-md transition-colors hover:bg-white/20"
               onClick={() => {
-                setSelectedMap(null);
                 setHasStarted(false);
                 setEditorMode(false);
               }}
             >
               <ArrowLeft size={18} />
-              <span className="text-sm font-medium">Menu</span>
+              <span className="text-sm font-medium">Accueil</span>
             </button>
           )}
 
-          {selectedMap === 'richards' && (
+          {hasStarted && (
             <button
               className={`pointer-events-auto rounded-full px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-colors ${
                 isEditorMode ? 'bg-amber-600/80 hover:bg-amber-500/80' : 'bg-white/10 hover:bg-white/20'
@@ -334,7 +286,7 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
             </button>
           )}
 
-          {selectedMap && (
+          {hasStarted && (
             <button
               className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white backdrop-blur-md transition-colors hover:bg-white/20"
               onClick={toggleCart}
@@ -346,7 +298,7 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
         </div>
       </div>
 
-      {selectedMap === 'richards' && isEditorMode && (
+      {isEditorMode && (
         <div className="pointer-events-none absolute left-6 top-24 rounded-2xl border border-white/10 bg-black/60 px-4 py-3 text-white backdrop-blur-md">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-white/60">Mode Edition</p>
           <p className="mt-2 text-sm">Position: X {editorCamera.x} | Y {editorCamera.y} | Z {editorCamera.z}</p>
@@ -354,17 +306,17 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
         </div>
       )}
 
-      {selectedMap === 'richards' && isEditorMode && (
+      {isEditorMode && (
         <div className="pointer-events-auto absolute right-6 top-24 max-h-[calc(100vh-7rem)] w-[22rem] overflow-y-auto rounded-2xl border border-white/10 bg-black/70 p-4 text-white backdrop-blur-md">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300/80">Editeur Richards</p>
-              <p className="mt-1 text-xs leading-relaxed text-white/55">Sauvegarde automatique locale. Les changements s’appliquent en temps reel.</p>
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300/80">Editeur Galerie</p>
+              <p className="mt-1 text-xs leading-relaxed text-white/55">Sauvegarde automatique locale. Les changements s&apos;appliquent en temps reel.</p>
             </div>
             <div className="flex flex-col items-end gap-2">
               <button
                 className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/20"
-                onClick={resetRichardsTuning}
+                onClick={resetGalleryTuning}
               >
                 Reset
               </button>
@@ -372,11 +324,11 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
                 className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-100 transition-colors hover:bg-amber-500/20"
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(richardsPresetSnippet);
-                    console.log('[Richards preset snippet]\n' + richardsPresetSnippet);
+                    await navigator.clipboard.writeText(galleryPresetSnippet);
+                    console.log('[Gallery preset snippet]\n' + galleryPresetSnippet);
                     setPresetStatus('Preset copie dans le presse-papiers.');
                   } catch {
-                    console.log('[Richards preset snippet]\n' + richardsPresetSnippet);
+                    console.log('[Gallery preset snippet]\n' + galleryPresetSnippet);
                     setPresetStatus('Impossible de copier automatiquement. Snippet envoye dans la console.');
                   }
                 }}
@@ -389,61 +341,61 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
           <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
             <p className="text-[11px] uppercase tracking-[0.25em] text-white/55">Preset code</p>
             <p className="mt-2 text-xs leading-relaxed text-white/60">
-              L'editeur sert au reglage rapide. Quand c'est bon, utilise <span className="font-semibold text-white">Copier preset</span> pour figer les valeurs ensuite dans le code.
+              L&apos;editeur sert au reglage rapide. Quand c&apos;est bon, utilise <span className="font-semibold text-white">Copier preset</span> pour figer les valeurs ensuite dans le code.
             </p>
             {presetStatus && <p className="mt-2 text-xs text-amber-200">{presetStatus}</p>}
           </div>
 
           <div className="mt-4 space-y-4">
             <section className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Surface</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Surface portail</p>
               <div className="space-y-2">
-                <NumericField label="Scale X" value={richardsSurfaceTuning.scale[0]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 0, value)} />
-                <NumericField label="Scale Y" value={richardsSurfaceTuning.scale[1]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 1, value)} />
-                <NumericField label="Scale Z" value={richardsSurfaceTuning.scale[2]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 2, value)} />
+                <NumericField label="Scale X" value={portalSurfaceTuning.scale[0]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 0, value)} />
+                <NumericField label="Scale Y" value={portalSurfaceTuning.scale[1]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 1, value)} />
+                <NumericField label="Scale Z" value={portalSurfaceTuning.scale[2]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 2, value)} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Offset X" value={richardsSurfaceTuning.offsetLocal[0]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 0, value)} />
-                <NumericField label="Offset Y" value={richardsSurfaceTuning.offsetLocal[1]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 1, value)} />
-                <NumericField label="Offset Z" value={richardsSurfaceTuning.offsetLocal[2]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 2, value)} />
+                <NumericField label="Offset X" value={portalSurfaceTuning.offsetLocal[0]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 0, value)} />
+                <NumericField label="Offset Y" value={portalSurfaceTuning.offsetLocal[1]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 1, value)} />
+                <NumericField label="Offset Z" value={portalSurfaceTuning.offsetLocal[2]} step={0.25} onChange={(value) => updateSurfaceVector('offsetLocal', 2, value)} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Pitch Deg" value={richardsSurfaceTuning.rotationOffsetDeg[0]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 0, value)} />
-                <NumericField label="Yaw Deg" value={richardsSurfaceTuning.rotationOffsetDeg[1]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 1, value)} />
-                <NumericField label="Roll Deg" value={richardsSurfaceTuning.rotationOffsetDeg[2]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 2, value)} />
+                <NumericField label="Pitch Deg" value={portalSurfaceTuning.rotationOffsetDeg[0]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 0, value)} />
+                <NumericField label="Yaw Deg" value={portalSurfaceTuning.rotationOffsetDeg[1]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 1, value)} />
+                <NumericField label="Roll Deg" value={portalSurfaceTuning.rotationOffsetDeg[2]} step={0.25} onChange={(value) => updateSurfaceVector('rotationOffsetDeg', 2, value)} />
               </div>
             </section>
 
             <section className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Monde Inferno</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Monde inferno</p>
               <div className="space-y-2">
-                <NumericField label="Scale Mul" value={richardsWorldTuning.scaleMultiplier} step={0.25} onChange={(value) => setRichardsWorldTuning((prev) => ({ ...prev, scaleMultiplier: value }))} />
+                <NumericField label="Scale Mul" value={portalWorldTuning.scaleMultiplier} step={0.25} onChange={(value) => setPortalWorldTuning((prev) => ({ ...prev, scaleMultiplier: value }))} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Pos X" value={richardsWorldTuning.position[0]} step={0.25} onChange={(value) => updateWorldVector('position', 0, value)} />
-                <NumericField label="Pos Y" value={richardsWorldTuning.position[1]} step={0.25} onChange={(value) => updateWorldVector('position', 1, value)} />
-                <NumericField label="Pos Z" value={richardsWorldTuning.position[2]} step={0.25} onChange={(value) => updateWorldVector('position', 2, value)} />
+                <NumericField label="Pos X" value={portalWorldTuning.position[0]} step={0.25} onChange={(value) => updateWorldVector('position', 0, value)} />
+                <NumericField label="Pos Y" value={portalWorldTuning.position[1]} step={0.25} onChange={(value) => updateWorldVector('position', 1, value)} />
+                <NumericField label="Pos Z" value={portalWorldTuning.position[2]} step={0.25} onChange={(value) => updateWorldVector('position', 2, value)} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Rot X" value={richardsWorldTuning.rotation[0]} step={0.25} onChange={(value) => updateWorldVector('rotation', 0, value)} />
-                <NumericField label="Rot Y" value={richardsWorldTuning.rotation[1]} step={0.25} onChange={(value) => updateWorldVector('rotation', 1, value)} />
-                <NumericField label="Rot Z" value={richardsWorldTuning.rotation[2]} step={0.25} onChange={(value) => updateWorldVector('rotation', 2, value)} />
+                <NumericField label="Rot X" value={portalWorldTuning.rotation[0]} step={0.25} onChange={(value) => updateWorldVector('rotation', 0, value)} />
+                <NumericField label="Rot Y" value={portalWorldTuning.rotation[1]} step={0.25} onChange={(value) => updateWorldVector('rotation', 1, value)} />
+                <NumericField label="Rot Z" value={portalWorldTuning.rotation[2]} step={0.25} onChange={(value) => updateWorldVector('rotation', 2, value)} />
               </div>
             </section>
 
             <section className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Sol Richards</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Sol principal</p>
               <div className="space-y-2">
-                <NumericField label="Repeat X" value={richardsFloorTuning.repeat[0]} step={0.25} onChange={(value) => updateFloorVector('repeat', 0, value)} />
-                <NumericField label="Repeat Y" value={richardsFloorTuning.repeat[1]} step={0.25} onChange={(value) => updateFloorVector('repeat', 1, value)} />
+                <NumericField label="Repeat X" value={galleryFloorTuning.repeat[0]} step={0.25} onChange={(value) => updateFloorVector('repeat', 0, value)} />
+                <NumericField label="Repeat Y" value={galleryFloorTuning.repeat[1]} step={0.25} onChange={(value) => updateFloorVector('repeat', 1, value)} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Offset X" value={richardsFloorTuning.offset[0]} step={0.25} onChange={(value) => updateFloorVector('offset', 0, value)} />
-                <NumericField label="Offset Y" value={richardsFloorTuning.offset[1]} step={0.25} onChange={(value) => updateFloorVector('offset', 1, value)} />
+                <NumericField label="Offset X" value={galleryFloorTuning.offset[0]} step={0.25} onChange={(value) => updateFloorVector('offset', 0, value)} />
+                <NumericField label="Offset Y" value={galleryFloorTuning.offset[1]} step={0.25} onChange={(value) => updateFloorVector('offset', 1, value)} />
               </div>
               <div className="mt-3 space-y-2">
-                <NumericField label="Rotation" value={richardsFloorTuning.rotationDeg} step={0.25} onChange={(value) => setRichardsFloorTuning((prev) => ({ ...prev, rotationDeg: value }))} />
-                <NumericField label="Normal" value={richardsFloorTuning.normalScale} step={0.25} onChange={(value) => setRichardsFloorTuning((prev) => ({ ...prev, normalScale: value }))} />
+                <NumericField label="Rotation" value={galleryFloorTuning.rotationDeg} step={0.25} onChange={(value) => setGalleryFloorTuning((prev) => ({ ...prev, rotationDeg: value }))} />
+                <NumericField label="Normal" value={galleryFloorTuning.normalScale} step={0.25} onChange={(value) => setGalleryFloorTuning((prev) => ({ ...prev, normalScale: value }))} />
               </div>
             </section>
           </div>
@@ -456,78 +408,30 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
         </div>
       )}
 
-      {isMapSelection && (
-        <div className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-10 bg-black/80 backdrop-blur-sm">
-          <div className="text-center text-white">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.4em] text-white/50">Galerie3d</p>
-            <h2 className="mb-3 text-5xl font-bold tracking-tight">Choisissez votre salle</h2>
-            <p className="text-base text-gray-400">Deux galeries, deux approches. La seconde utilise ton GLB importe.</p>
-          </div>
-
-          <div className="flex gap-6 px-4">
-            {MAPS.map((map) => (
-              <button
-                key={map.id}
-                onClick={() => handleSelectMap(map.id)}
-                className="group relative w-80 overflow-hidden rounded-2xl border border-white/10 text-left transition-all duration-300 hover:scale-[1.03] hover:border-white/30"
-                style={{ background: map.bg }}
-              >
-                <div
-                  className="absolute right-4 top-4 z-10 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest"
-                  style={{ background: map.accent, color: '#fff' }}
-                >
-                  {map.badge}
-                </div>
-
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={map.thumb}
-                    alt={map.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70" />
-                </div>
-
-                <div className="p-5 pt-4">
-                  <p className="mb-1 text-xs font-medium uppercase tracking-[0.25em]" style={{ color: map.accent }}>
-                    {map.subtitle}
-                  </p>
-                  <h3 className="mb-2 text-xl font-bold text-white">{map.name}</h3>
-                  <p className="text-sm leading-relaxed text-gray-400">{map.description}</p>
-
-                  <div
-                    className="mt-5 flex w-full items-center justify-center rounded-xl py-3 text-sm font-bold uppercase tracking-[0.15em] text-white transition-opacity group-hover:opacity-100"
-                    style={{ background: `${map.accent}33`, border: `1px solid ${map.accent}66` }}
-                  >
-                    Entrer dans la galerie →
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div
         id="resume-overlay"
         className={`absolute inset-0 z-0 flex cursor-pointer items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           isEnterOverlay || isResumeOverlay ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={() => {
-          if (!hasStarted) {
-            setHasStarted(true);
-          }
+          setHasStarted(true);
         }}
       >
         {isEnterOverlay && (
-          <div className="max-w-sm rounded-2xl border border-white/10 bg-black/40 px-8 py-6 text-white backdrop-blur-md">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.35em] text-white/50">Galerie3d</p>
-            <h2 className="mb-3 text-3xl font-bold tracking-tight">Pret a explorer ?</h2>
-            <p className="mb-5 text-sm leading-relaxed text-gray-300">
-              Cliquez pour capturer la souris et commencer a vous deplacer.
-            </p>
-            <div className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black">
-              Cliquer pour commencer
+          <div className="flex max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-black/55 text-white shadow-2xl backdrop-blur-md md:flex-row">
+            <div className="relative h-64 md:h-auto md:w-[28rem]">
+              <img src={MAIN_GALLERY_PREVIEW_URL} alt="Apercu de la galerie principale" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/35" />
+            </div>
+            <div className="flex max-w-xl flex-col justify-center px-8 py-8">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.35em] text-white/50">Gallery3d</p>
+              <h2 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl">Salle principale</h2>
+              <p className="mb-5 text-sm leading-relaxed text-gray-300">
+                Cette version du site charge une seule map jouable, issue du GLB principal du projet. L&apos;ancienne logique multi-salles a ete retiree pour garder une structure plus claire.
+              </p>
+              <div className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black">
+                Cliquer pour commencer
+              </div>
             </div>
           </div>
         )}
@@ -543,7 +447,7 @@ export const DEFAULT_RICHARDS_INFERNO_ENABLED = ${richardsInfernoEnabled};`;
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center text-white">
           <p className="text-lg font-medium">{hoveredArtwork.title}</p>
           <p className="text-sm text-gray-400">
-            {selectedMap === 'richards' && richardsHoverHint ? richardsHoverHint : 'Cliquez pour voir les details'}
+            {galleryHoverHint || 'Cliquez pour voir les details'}
           </p>
         </div>
       )}

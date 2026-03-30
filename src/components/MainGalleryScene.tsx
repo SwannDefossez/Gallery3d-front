@@ -3,15 +3,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Player } from './Player';
-import { type ArtworkData, type RichardsSurfaceTuning, useGalleryStore } from '../store';
+import { type ArtworkData, type PortalSurfaceTuning, useGalleryStore } from '../store';
 
-const ROOT_GALLERY_MODEL_URL = new URL('../../richards_art_gallery_-_audio_tour.glb', import.meta.url).href;
+const MAIN_GALLERY_MODEL_URL = '/assets/maps/main-gallery.glb';
 const INFERNO_MODEL_URL = '/assets/models/inferno-world-free.glb';
 const INFERNO_PREVIEW_URL = '/assets/previews/inferno-world-preview.png';
-const RICHARDS_SKY_URL = '/assets/skies/qwantani_afternoon_puresky.jpg';
-const RICHARDS_FLOOR_DIFFUSE_URL = '/assets/textures/richards_floor/black_painted_planks_diff_4k.jpg';
-const RICHARDS_FLOOR_NORMAL_URL = '/assets/textures/richards_floor/black_painted_planks_nor_gl_4k.jpg';
-const RICHARDS_FLOOR_ROUGHNESS_URL = '/assets/textures/richards_floor/black_painted_planks_rough_4k.jpg';
+const GALLERY_SKY_URL = '/assets/skies/qwantani_afternoon_puresky.jpg';
+const GALLERY_FLOOR_DIFFUSE_URL = '/assets/textures/gallery-floor/black_painted_planks_diff_4k.jpg';
+const GALLERY_FLOOR_NORMAL_URL = '/assets/textures/gallery-floor/black_painted_planks_nor_gl_4k.jpg';
+const GALLERY_FLOOR_ROUGHNESS_URL = '/assets/textures/gallery-floor/black_painted_planks_rough_4k.jpg';
 const HIDDEN_OBJECT_NAMES = new Set([
   'jake and london eye london eye manual bake 0',
   'round table',
@@ -29,20 +29,20 @@ const HIDDEN_MATERIAL_NAMES = new Set(['london eye manual bake', 'holly manual b
 const HIDDEN_OBJECT_NAME_PARTS = ['holly manual bake', 'object004', 'water fountain', 'round table'];
 const INFERNO_ANCHOR_NAME = 'jake_and_london_eye_london_eye_manual_bake_0';
 
-const RICHARDS_WALKABLE = [
+const MAIN_GALLERY_WALKABLE = [
   { minX: -80, maxX: 80, minZ: -80, maxZ: 80 },
 ];
 
-const RICHARDS_SPAWN: [number, number, number] = [2.7, 1.6, -0.24];
-const RICHARDS_LOOK_AT: [number, number, number] = [0, 1.6, 0];
-const RICHARDS_SPAWN_ROTATION: [number, number, number] = [
+const MAIN_GALLERY_SPAWN: [number, number, number] = [2.7, 1.6, -0.24];
+const MAIN_GALLERY_LOOK_AT: [number, number, number] = [0, 1.6, 0];
+const MAIN_GALLERY_SPAWN_ROTATION: [number, number, number] = [
   THREE.MathUtils.degToRad(-123.2),
   THREE.MathUtils.degToRad(89.1),
   THREE.MathUtils.degToRad(123.2),
 ];
 
-const RICHARDS_INFERNO_ARTWORK: ArtworkData = {
-  id: 'richards-inferno',
+const INFERNO_PORTAL_ARTWORK: ArtworkData = {
+  id: 'inferno-portal',
   title: 'Inferno World',
   artist: 'Modele importe',
   description:
@@ -71,13 +71,13 @@ function getMeshMaterials(mesh: THREE.Mesh) {
   return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 }
 
-function normalizeRichardsName(value: string) {
+function normalizeSceneName(value: string) {
   return value.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function shouldHideRichardsObject(object: THREE.Object3D) {
+function shouldHideSceneObject(object: THREE.Object3D) {
   for (let current: THREE.Object3D | null = object; current; current = current.parent) {
-    const normalizedName = normalizeRichardsName(current.name);
+    const normalizedName = normalizeSceneName(current.name);
 
     if (
       HIDDEN_OBJECT_NAMES.has(normalizedName) ||
@@ -92,7 +92,7 @@ function shouldHideRichardsObject(object: THREE.Object3D) {
   }
 
   return getMeshMaterials(object).some((material) => {
-    const materialName = normalizeRichardsName(material?.name ?? '');
+    const materialName = normalizeSceneName(material?.name ?? '');
     return HIDDEN_MATERIAL_NAMES.has(materialName);
   });
 }
@@ -126,11 +126,11 @@ function shouldIgnoreForCollision(mesh: THREE.Mesh) {
   });
 }
 
-function shouldOverrideRichardsFloor(object: THREE.Object3D) {
+function shouldOverrideGalleryFloor(object: THREE.Object3D) {
   const chain: string[] = [];
 
   for (let current: THREE.Object3D | null = object; current; current = current.parent) {
-    chain.push(normalizeRichardsName(current.name));
+    chain.push(normalizeSceneName(current.name));
   }
 
   const floorIndex = chain.indexOf('floor');
@@ -212,7 +212,7 @@ function CameraDebugReporter() {
 }
 
 function SkyDome() {
-  const skyTexture = useTexture(RICHARDS_SKY_URL);
+  const skyTexture = useTexture(GALLERY_SKY_URL);
 
   useEffect(() => {
     skyTexture.colorSpace = THREE.SRGBColorSpace;
@@ -226,14 +226,12 @@ function SkyDome() {
   );
 }
 
-function buildReplacementSurface(targetObject: THREE.Object3D, surfaceTuning: RichardsSurfaceTuning) {
+function buildReplacementSurface(targetObject: THREE.Object3D, surfaceTuning: PortalSurfaceTuning) {
   if (!(targetObject instanceof THREE.Mesh)) {
     return null;
   }
 
   const geometry = targetObject.geometry.clone();
-  geometry.computeBoundingBox();
-  const localBounds = geometry.boundingBox ?? new THREE.Box3(new THREE.Vector3(-0.5, -0.5, 0), new THREE.Vector3(0.5, 0.5, 0));
   const position = new THREE.Vector3();
   const quaternion = new THREE.Quaternion();
   const scale = new THREE.Vector3();
@@ -263,7 +261,7 @@ function buildReplacementSurface(targetObject: THREE.Object3D, surfaceTuning: Ri
 
 function InfernoPortalContent() {
   const { scene } = useGLTF(INFERNO_MODEL_URL);
-  const richardsWorldTuning = useGalleryStore((state) => state.richardsWorldTuning);
+  const portalWorldTuning = useGalleryStore((state) => state.portalWorldTuning);
 
   const normalized = useMemo(() => {
     const bounds = new THREE.Box3().setFromObject(scene);
@@ -277,10 +275,10 @@ function InfernoPortalContent() {
     const fitX = 42 / safeSize.x;
     const fitY = 16 / safeSize.y;
     const fitZ = 42 / safeSize.z;
-    const scale = Math.min(fitX, fitY, fitZ) * richardsWorldTuning.scaleMultiplier;
+    const scale = Math.min(fitX, fitY, fitZ) * portalWorldTuning.scaleMultiplier;
 
     return { center, scale };
-  }, [richardsWorldTuning.scaleMultiplier, scene]);
+  }, [portalWorldTuning.scaleMultiplier, scene]);
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -300,7 +298,7 @@ function InfernoPortalContent() {
       <ambientLight intensity={0.24} color="#ffffff" />
       <directionalLight position={[5, 10, 5]} intensity={0.35} />
       <Environment preset="city" resolution={64} frames={1} />
-      <group position={richardsWorldTuning.position} rotation={richardsWorldTuning.rotation}>
+      <group position={portalWorldTuning.position} rotation={portalWorldTuning.rotation}>
         <group scale={normalized.scale}>
           <group position={[-normalized.center.x, -normalized.center.y, -normalized.center.z]}>
             <Clone object={scene} />
@@ -379,15 +377,15 @@ function InfernoPreviewMaterial({
   );
 }
 
-function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }) {
-  const infernoEnabled = useGalleryStore((state) => state.richardsInfernoEnabled);
-  const setInfernoEnabled = useGalleryStore((state) => state.setRichardsInfernoEnabled);
+function GalleryInfernoPortal({ surface }: { surface: ReplacementSurface }) {
+  const infernoPortalEnabled = useGalleryStore((state) => state.infernoPortalEnabled);
+  const setInfernoPortalEnabled = useGalleryStore((state) => state.setInfernoPortalEnabled);
   const isLocked = useGalleryStore((state) => state.isLocked);
   const hoveredArtwork = useGalleryStore((state) => state.hoveredArtwork);
   const setHoveredArtwork = useGalleryStore((state) => state.setHoveredArtwork);
   const selectedArtwork = useGalleryStore((state) => state.selectedArtwork);
   const setSelectedArtwork = useGalleryStore((state) => state.setSelectedArtwork);
-  const setRichardsHoverHint = useGalleryStore((state) => state.setRichardsHoverHint);
+  const setGalleryHoverHint = useGalleryStore((state) => state.setGalleryHoverHint);
   const previewTexture = useTexture(INFERNO_PREVIEW_URL);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -397,12 +395,12 @@ function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }
 
   useEffect(
     () => () => {
-      setRichardsHoverHint('');
-      if (useGalleryStore.getState().hoveredArtwork?.id === RICHARDS_INFERNO_ARTWORK.id) {
+      setGalleryHoverHint('');
+      if (useGalleryStore.getState().hoveredArtwork?.id === INFERNO_PORTAL_ARTWORK.id) {
         setHoveredArtwork(null);
       }
     },
-    [setHoveredArtwork, setRichardsHoverHint],
+    [setHoveredArtwork, setGalleryHoverHint],
   );
 
   useEffect(() => {
@@ -416,12 +414,12 @@ function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }
       }
 
       event.preventDefault();
-      setInfernoEnabled(!useGalleryStore.getState().richardsInfernoEnabled);
+      setInfernoPortalEnabled(!useGalleryStore.getState().infernoPortalEnabled);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHovered, isLocked, selectedArtwork, setInfernoEnabled]);
+  }, [isHovered, isLocked, selectedArtwork, setInfernoPortalEnabled]);
 
   return (
     <group position={surface.position} rotation={surface.rotation} scale={surface.scale}>
@@ -431,9 +429,9 @@ function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }
         onPointerOver={(event) => {
           event.stopPropagation();
           setIsHovered(true);
-          setHoveredArtwork(RICHARDS_INFERNO_ARTWORK);
-          setRichardsHoverHint(
-            infernoEnabled
+          setHoveredArtwork(INFERNO_PORTAL_ARTWORK);
+          setGalleryHoverHint(
+            infernoPortalEnabled
               ? 'Cliquez pour ouvrir la fiche. Appuyez sur E pour revenir a l image.'
               : 'Cliquez pour ouvrir la fiche. Appuyez sur E pour activer la 3D.',
           );
@@ -441,10 +439,10 @@ function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }
         onPointerOut={(event) => {
           event.stopPropagation();
           setIsHovered(false);
-          if (hoveredArtwork?.id === RICHARDS_INFERNO_ARTWORK.id) {
+          if (hoveredArtwork?.id === INFERNO_PORTAL_ARTWORK.id) {
             setHoveredArtwork(null);
           }
-          setRichardsHoverHint('');
+          setGalleryHoverHint('');
         }}
         onClick={(event) => {
           event.stopPropagation();
@@ -452,10 +450,10 @@ function RichardsInfernoReplacement({ surface }: { surface: ReplacementSurface }
             return;
           }
 
-          setSelectedArtwork(RICHARDS_INFERNO_ARTWORK);
+          setSelectedArtwork(INFERNO_PORTAL_ARTWORK);
         }}
       >
-        {infernoEnabled ? (
+        {infernoPortalEnabled ? (
           <MeshPortalMaterial blur={0} resolution={128} worldUnits>
             <InfernoPortalContent />
           </MeshPortalMaterial>
@@ -479,7 +477,7 @@ function findObjectByRuntimeName(root: THREE.Object3D, expectedName: string) {
   return matches.find((object) => object instanceof THREE.Mesh) ?? matches[0] ?? null;
 }
 
-function findRichardsDebugNames(root: THREE.Object3D) {
+function findSceneDebugNames(root: THREE.Object3D) {
   const matches: string[] = [];
 
   root.traverse((object) => {
@@ -496,7 +494,7 @@ function findRichardsDebugNames(root: THREE.Object3D) {
   return matches;
 }
 
-function RichardsGalleryModel({
+function MainGalleryModel({
   modelRef,
   onReady,
   floorMaterial,
@@ -505,7 +503,7 @@ function RichardsGalleryModel({
   onReady: () => void;
   floorMaterial: THREE.MeshStandardMaterial;
 }) {
-  const { scene } = useGLTF(ROOT_GALLERY_MODEL_URL);
+  const { scene } = useGLTF(MAIN_GALLERY_MODEL_URL);
 
   const placement = useMemo(() => {
     const bounds = new THREE.Box3().setFromObject(scene);
@@ -519,7 +517,7 @@ function RichardsGalleryModel({
 
   useEffect(() => {
     scene.traverse((child) => {
-      if (child instanceof THREE.Mesh && shouldOverrideRichardsFloor(child)) {
+      if (child instanceof THREE.Mesh && shouldOverrideGalleryFloor(child)) {
         child.geometry = createPlanarFloorUvGeometry(child.geometry);
         child.material = floorMaterial;
         child.castShadow = false;
@@ -544,19 +542,19 @@ function RichardsGalleryModel({
   );
 }
 
-useGLTF.preload(ROOT_GALLERY_MODEL_URL);
+useGLTF.preload(MAIN_GALLERY_MODEL_URL);
 useGLTF.preload(INFERNO_MODEL_URL);
 
-export function RichardsGalleryScene() {
+export function MainGalleryScene() {
   const { gl } = useThree();
   const isEditorMode = useGalleryStore((state) => state.isEditorMode);
-  const richardsSurfaceTuning = useGalleryStore((state) => state.richardsSurfaceTuning);
-  const richardsWorldTuning = useGalleryStore((state) => state.richardsWorldTuning);
-  const richardsFloorTuning = useGalleryStore((state) => state.richardsFloorTuning);
+  const portalSurfaceTuning = useGalleryStore((state) => state.portalSurfaceTuning);
+  const portalWorldTuning = useGalleryStore((state) => state.portalWorldTuning);
+  const galleryFloorTuning = useGalleryStore((state) => state.galleryFloorTuning);
   const [floorDiffuse, floorNormal, floorRoughness] = useTexture([
-    RICHARDS_FLOOR_DIFFUSE_URL,
-    RICHARDS_FLOOR_NORMAL_URL,
-    RICHARDS_FLOOR_ROUGHNESS_URL,
+    GALLERY_FLOOR_DIFFUSE_URL,
+    GALLERY_FLOOR_NORMAL_URL,
+    GALLERY_FLOOR_ROUGHNESS_URL,
   ]);
   const [collisionReady, setCollisionReady] = useState(false);
   const [collisionMeshes, setCollisionMeshes] = useState<THREE.Object3D[]>([]);
@@ -569,16 +567,16 @@ export function RichardsGalleryScene() {
     textures.forEach((texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(richardsFloorTuning.repeat[0], richardsFloorTuning.repeat[1]);
-      texture.offset.set(richardsFloorTuning.offset[0], richardsFloorTuning.offset[1]);
+      texture.repeat.set(galleryFloorTuning.repeat[0], galleryFloorTuning.repeat[1]);
+      texture.offset.set(galleryFloorTuning.offset[0], galleryFloorTuning.offset[1]);
       texture.center.set(0.5, 0.5);
-      texture.rotation = THREE.MathUtils.degToRad(richardsFloorTuning.rotationDeg);
+      texture.rotation = THREE.MathUtils.degToRad(galleryFloorTuning.rotationDeg);
       texture.anisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), 8);
       texture.needsUpdate = true;
     });
 
     floorDiffuse.colorSpace = THREE.SRGBColorSpace;
-  }, [floorDiffuse, floorNormal, floorRoughness, gl, richardsFloorTuning]);
+  }, [floorDiffuse, floorNormal, floorRoughness, galleryFloorTuning, gl]);
 
   const floorMaterial = useMemo(() => {
     const material = new THREE.MeshStandardMaterial({
@@ -588,11 +586,11 @@ export function RichardsGalleryScene() {
       color: '#ffffff',
       roughness: 0.82,
       metalness: 0.02,
-      normalScale: new THREE.Vector2(richardsFloorTuning.normalScale, richardsFloorTuning.normalScale),
+      normalScale: new THREE.Vector2(galleryFloorTuning.normalScale, galleryFloorTuning.normalScale),
     });
 
     return material;
-  }, [floorDiffuse, floorNormal, floorRoughness, richardsFloorTuning.normalScale]);
+  }, [floorDiffuse, floorNormal, floorRoughness, galleryFloorTuning.normalScale]);
 
   useEffect(() => () => floorMaterial.dispose(), [floorMaterial]);
 
@@ -606,25 +604,20 @@ export function RichardsGalleryScene() {
     modelRef.current.updateWorldMatrix(true, true);
 
     const targetObject = findObjectByRuntimeName(modelRef.current, INFERNO_ANCHOR_NAME);
-    const debugNames = findRichardsDebugNames(modelRef.current);
+    const debugNames = findSceneDebugNames(modelRef.current);
 
     if (targetObject) {
       targetObject.updateWorldMatrix(true, false);
-      const surface = buildReplacementSurface(targetObject, richardsSurfaceTuning);
+      const surface = buildReplacementSurface(targetObject, portalSurfaceTuning);
       setInfernoSurface(surface);
-      console.log('[Richards replacement] inferno surface:', surface);
+      console.log('[Main gallery] inferno surface:', surface);
     } else {
       setInfernoSurface(null);
-      console.log(
-        '[Richards replacement] inferno surface introuvable:',
-        INFERNO_ANCHOR_NAME,
-        'runtime:',
-        debugNames,
-      );
+      console.log('[Main gallery] inferno surface introuvable:', INFERNO_ANCHOR_NAME, 'runtime:', debugNames);
     }
 
     modelRef.current.traverse((object) => {
-      if (!shouldHideRichardsObject(object)) {
+      if (!shouldHideSceneObject(object)) {
         return;
       }
 
@@ -653,10 +646,10 @@ export function RichardsGalleryScene() {
     });
 
     setCollisionMeshes(solids);
-    console.log('[Richards collisions] ignored meshes:', ignored);
-    console.log('[Richards replacement] hidden objects:', hiddenObjects);
-    console.log('[Richards replacement] runtime names:', debugNames);
-  }, [collisionReady, richardsSurfaceTuning, richardsWorldTuning]);
+    console.log('[Main gallery] ignored collision meshes:', ignored);
+    console.log('[Main gallery] hidden objects:', hiddenObjects);
+    console.log('[Main gallery] runtime names:', debugNames);
+  }, [collisionReady, portalSurfaceTuning, portalWorldTuning]);
 
   return (
     <>
@@ -670,25 +663,25 @@ export function RichardsGalleryScene() {
       <SkyDome />
 
       <Player
-        walkableRects={RICHARDS_WALKABLE}
+        walkableRects={MAIN_GALLERY_WALKABLE}
         collisionRects={[]}
-        spawnPosition={RICHARDS_SPAWN}
-        spawnLookAt={RICHARDS_LOOK_AT}
-        spawnRotation={RICHARDS_SPAWN_ROTATION}
+        spawnPosition={MAIN_GALLERY_SPAWN}
+        spawnLookAt={MAIN_GALLERY_LOOK_AT}
+        spawnRotation={MAIN_GALLERY_SPAWN_ROTATION}
         noClip={isEditorMode}
         fly={isEditorMode}
         moveSpeed={isEditorMode ? 12 : 5}
         collisionObjects={isEditorMode ? [] : collisionMeshes}
-        persistKey="richards-player-camera"
+        persistKey="main-gallery-player-camera"
       />
 
       <CameraDebugReporter />
-      <RichardsGalleryModel
+      <MainGalleryModel
         modelRef={modelRef}
         floorMaterial={floorMaterial}
         onReady={() => setCollisionReady(true)}
       />
-      {infernoSurface && <RichardsInfernoReplacement surface={infernoSurface} />}
+      {infernoSurface && <GalleryInfernoPortal surface={infernoSurface} />}
     </>
   );
 }
