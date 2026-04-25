@@ -12,7 +12,7 @@ export default function App() {
         shadows
         dpr={[1, 1.5]}
         performance={{ min: 0.5 }}
-        camera={{ position: [0, 1.6, 0], fov: 60 }}
+        camera={{ position: [0, 2, 0], fov: 60 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Suspense fallback={null}>

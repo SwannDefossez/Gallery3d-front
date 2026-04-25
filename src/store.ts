@@ -49,7 +49,7 @@ export interface GalleryFloorTuning {
   normalScale: number;
 }
 
-const GALLERY_TUNING_STORAGE_KEY = 'main-gallery-editor-tuning-v1';
+const GALLERY_TUNING_STORAGE_KEY = 'main-gallery-editor-tuning-v2';
 
 export const DEFAULT_PORTAL_SURFACE_TUNING: PortalSurfaceTuning = {
   scale: [1, 1, 1],
@@ -58,12 +58,19 @@ export const DEFAULT_PORTAL_SURFACE_TUNING: PortalSurfaceTuning = {
 };
 
 export const DEFAULT_PORTAL_WORLD_TUNING: PortalWorldTuning = {
-  scaleMultiplier: 3.75,
-  position: [-12.5, 8.75, -24],
-  rotation: [0, 4.6, 0],
+  scaleMultiplier: 1,
+  position: [-4.5, 2.5, -6.75],
+  rotation: [0, -1.5, 0],
 };
 
-export const DEFAULT_INFERNO_PORTAL_ENABLED = false;
+export const DEFAULT_TABLEAU_9_WORLD_TUNING: PortalWorldTuning = {
+  scaleMultiplier: 1,
+  position: [0, 0, 0],
+  rotation: [0, 0, 0],
+};
+
+export const DEFAULT_INFERNO_PORTAL_ENABLED = true;
+export const DEFAULT_TABLEAU_9_PORTAL_ENABLED = true;
 
 export const DEFAULT_GALLERY_FLOOR_TUNING: GalleryFloorTuning = {
   repeat: [0.25, 0.25],
@@ -102,8 +109,10 @@ function cloneGalleryFloorTuning(tuning: GalleryFloorTuning = DEFAULT_GALLERY_FL
 function saveGalleryTuning(
   surface: PortalSurfaceTuning,
   world: PortalWorldTuning,
+  tableau9World: PortalWorldTuning,
   floor: GalleryFloorTuning,
   infernoEnabled: boolean,
+  tableau9Enabled: boolean,
 ) {
   if (typeof window === 'undefined') {
     return;
@@ -114,8 +123,10 @@ function saveGalleryTuning(
     JSON.stringify({
       surface: clonePortalSurfaceTuning(surface),
       world: clonePortalWorldTuning(world),
+      tableau9World: clonePortalWorldTuning(tableau9World),
       floor: cloneGalleryFloorTuning(floor),
       infernoEnabled,
+      tableau9Enabled,
     }),
   );
 }
@@ -125,8 +136,10 @@ function loadGalleryTuning() {
     return {
       surface: clonePortalSurfaceTuning(),
       world: clonePortalWorldTuning(),
+      tableau9World: clonePortalWorldTuning(DEFAULT_TABLEAU_9_WORLD_TUNING),
       floor: cloneGalleryFloorTuning(),
       infernoEnabled: DEFAULT_INFERNO_PORTAL_ENABLED,
+      tableau9Enabled: DEFAULT_TABLEAU_9_PORTAL_ENABLED,
     };
   }
 
@@ -137,16 +150,20 @@ function loadGalleryTuning() {
       return {
         surface: clonePortalSurfaceTuning(),
         world: clonePortalWorldTuning(),
+        tableau9World: clonePortalWorldTuning(DEFAULT_TABLEAU_9_WORLD_TUNING),
         floor: cloneGalleryFloorTuning(),
         infernoEnabled: DEFAULT_INFERNO_PORTAL_ENABLED,
+        tableau9Enabled: DEFAULT_TABLEAU_9_PORTAL_ENABLED,
       };
     }
 
     const parsed = JSON.parse(rawValue) as {
       surface?: Partial<PortalSurfaceTuning>;
       world?: Partial<PortalWorldTuning>;
+      tableau9World?: Partial<PortalWorldTuning>;
       floor?: Partial<GalleryFloorTuning>;
       infernoEnabled?: boolean;
+      tableau9Enabled?: boolean;
     };
 
     return {
@@ -166,6 +183,19 @@ function loadGalleryTuning() {
         position: [...(parsed.world?.position ?? DEFAULT_PORTAL_WORLD_TUNING.position)] as [number, number, number],
         rotation: [...(parsed.world?.rotation ?? DEFAULT_PORTAL_WORLD_TUNING.rotation)] as [number, number, number],
       },
+      tableau9World: {
+        scaleMultiplier: parsed.tableau9World?.scaleMultiplier ?? DEFAULT_TABLEAU_9_WORLD_TUNING.scaleMultiplier,
+        position: [...(parsed.tableau9World?.position ?? DEFAULT_TABLEAU_9_WORLD_TUNING.position)] as [
+          number,
+          number,
+          number,
+        ],
+        rotation: [...(parsed.tableau9World?.rotation ?? DEFAULT_TABLEAU_9_WORLD_TUNING.rotation)] as [
+          number,
+          number,
+          number,
+        ],
+      },
       floor: {
         repeat: [...(parsed.floor?.repeat ?? DEFAULT_GALLERY_FLOOR_TUNING.repeat)] as [number, number],
         offset: [...(parsed.floor?.offset ?? DEFAULT_GALLERY_FLOOR_TUNING.offset)] as [number, number],
@@ -173,13 +203,16 @@ function loadGalleryTuning() {
         normalScale: parsed.floor?.normalScale ?? DEFAULT_GALLERY_FLOOR_TUNING.normalScale,
       },
       infernoEnabled: parsed.infernoEnabled ?? DEFAULT_INFERNO_PORTAL_ENABLED,
+      tableau9Enabled: parsed.tableau9Enabled ?? DEFAULT_TABLEAU_9_PORTAL_ENABLED,
     };
   } catch {
     return {
       surface: clonePortalSurfaceTuning(),
       world: clonePortalWorldTuning(),
+      tableau9World: clonePortalWorldTuning(DEFAULT_TABLEAU_9_WORLD_TUNING),
       floor: cloneGalleryFloorTuning(),
       infernoEnabled: DEFAULT_INFERNO_PORTAL_ENABLED,
+      tableau9Enabled: DEFAULT_TABLEAU_9_PORTAL_ENABLED,
     };
   }
 }
@@ -210,10 +243,14 @@ interface GalleryState {
   setPortalSurfaceTuning: (tuning: PortalSurfaceTuning | ((prev: PortalSurfaceTuning) => PortalSurfaceTuning)) => void;
   portalWorldTuning: PortalWorldTuning;
   setPortalWorldTuning: (tuning: PortalWorldTuning | ((prev: PortalWorldTuning) => PortalWorldTuning)) => void;
+  tableau9WorldTuning: PortalWorldTuning;
+  setTableau9WorldTuning: (tuning: PortalWorldTuning | ((prev: PortalWorldTuning) => PortalWorldTuning)) => void;
   galleryFloorTuning: GalleryFloorTuning;
   setGalleryFloorTuning: (tuning: GalleryFloorTuning | ((prev: GalleryFloorTuning) => GalleryFloorTuning)) => void;
   infernoPortalEnabled: boolean;
   setInfernoPortalEnabled: (enabled: boolean) => void;
+  tableau9PortalEnabled: boolean;
+  setTableau9PortalEnabled: (enabled: boolean) => void;
   resetGalleryTuning: () => void;
 }
 
@@ -256,7 +293,14 @@ export const useGalleryStore = create<GalleryState>((set) => ({
     set((state) => {
       const nextTuning =
         typeof tuning === 'function' ? tuning(clonePortalSurfaceTuning(state.portalSurfaceTuning)) : tuning;
-      saveGalleryTuning(nextTuning, state.portalWorldTuning, state.galleryFloorTuning, state.infernoPortalEnabled);
+      saveGalleryTuning(
+        nextTuning,
+        state.portalWorldTuning,
+        state.tableau9WorldTuning,
+        state.galleryFloorTuning,
+        state.infernoPortalEnabled,
+        state.tableau9PortalEnabled,
+      );
       return { portalSurfaceTuning: clonePortalSurfaceTuning(nextTuning) };
     }),
   portalWorldTuning: initialGalleryTuning.world,
@@ -264,34 +308,93 @@ export const useGalleryStore = create<GalleryState>((set) => ({
     set((state) => {
       const nextTuning =
         typeof tuning === 'function' ? tuning(clonePortalWorldTuning(state.portalWorldTuning)) : tuning;
-      saveGalleryTuning(state.portalSurfaceTuning, nextTuning, state.galleryFloorTuning, state.infernoPortalEnabled);
+      saveGalleryTuning(
+        state.portalSurfaceTuning,
+        nextTuning,
+        state.tableau9WorldTuning,
+        state.galleryFloorTuning,
+        state.infernoPortalEnabled,
+        state.tableau9PortalEnabled,
+      );
       return { portalWorldTuning: clonePortalWorldTuning(nextTuning) };
+    }),
+  tableau9WorldTuning: initialGalleryTuning.tableau9World,
+  setTableau9WorldTuning: (tuning) =>
+    set((state) => {
+      const nextTuning =
+        typeof tuning === 'function' ? tuning(clonePortalWorldTuning(state.tableau9WorldTuning)) : tuning;
+      saveGalleryTuning(
+        state.portalSurfaceTuning,
+        state.portalWorldTuning,
+        nextTuning,
+        state.galleryFloorTuning,
+        state.infernoPortalEnabled,
+        state.tableau9PortalEnabled,
+      );
+      return { tableau9WorldTuning: clonePortalWorldTuning(nextTuning) };
     }),
   galleryFloorTuning: initialGalleryTuning.floor,
   setGalleryFloorTuning: (tuning) =>
     set((state) => {
       const nextTuning =
         typeof tuning === 'function' ? tuning(cloneGalleryFloorTuning(state.galleryFloorTuning)) : tuning;
-      saveGalleryTuning(state.portalSurfaceTuning, state.portalWorldTuning, nextTuning, state.infernoPortalEnabled);
+      saveGalleryTuning(
+        state.portalSurfaceTuning,
+        state.portalWorldTuning,
+        state.tableau9WorldTuning,
+        nextTuning,
+        state.infernoPortalEnabled,
+        state.tableau9PortalEnabled,
+      );
       return { galleryFloorTuning: cloneGalleryFloorTuning(nextTuning) };
     }),
   infernoPortalEnabled: initialGalleryTuning.infernoEnabled,
   setInfernoPortalEnabled: (enabled) =>
     set((state) => {
-      saveGalleryTuning(state.portalSurfaceTuning, state.portalWorldTuning, state.galleryFloorTuning, enabled);
+      saveGalleryTuning(
+        state.portalSurfaceTuning,
+        state.portalWorldTuning,
+        state.tableau9WorldTuning,
+        state.galleryFloorTuning,
+        enabled,
+        state.tableau9PortalEnabled,
+      );
       return { infernoPortalEnabled: enabled };
+    }),
+  tableau9PortalEnabled: initialGalleryTuning.tableau9Enabled,
+  setTableau9PortalEnabled: (enabled) =>
+    set((state) => {
+      saveGalleryTuning(
+        state.portalSurfaceTuning,
+        state.portalWorldTuning,
+        state.tableau9WorldTuning,
+        state.galleryFloorTuning,
+        state.infernoPortalEnabled,
+        enabled,
+      );
+      return { tableau9PortalEnabled: enabled };
     }),
   resetGalleryTuning: () =>
     set(() => {
       const surface = clonePortalSurfaceTuning();
       const world = clonePortalWorldTuning();
+      const tableau9World = clonePortalWorldTuning(DEFAULT_TABLEAU_9_WORLD_TUNING);
       const floor = cloneGalleryFloorTuning();
-      saveGalleryTuning(surface, world, floor, DEFAULT_INFERNO_PORTAL_ENABLED);
+      saveGalleryTuning(
+        surface,
+        world,
+        tableau9World,
+        floor,
+        DEFAULT_INFERNO_PORTAL_ENABLED,
+        DEFAULT_TABLEAU_9_PORTAL_ENABLED,
+      );
       return {
         portalSurfaceTuning: surface,
         portalWorldTuning: world,
+        tableau9WorldTuning: tableau9World,
         galleryFloorTuning: floor,
         infernoPortalEnabled: DEFAULT_INFERNO_PORTAL_ENABLED,
+        tableau9PortalEnabled: DEFAULT_TABLEAU_9_PORTAL_ENABLED,
       };
     }),
 }));

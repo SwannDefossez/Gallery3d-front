@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useGalleryStore } from '../store';
 
 const SPEED = 5;
-const EYE_LEVEL = 1.6;
+const EYE_LEVEL = 2;
 const SOFT_ZONE = 1.15;
 const GRAVITY = 18;
 const JUMP_VELOCITY = 7.2;

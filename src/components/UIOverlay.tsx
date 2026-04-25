@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, ShoppingCart, X } from 'lucide-react';
 import * as THREE from 'three';
 import { useGalleryStore, type ArtworkData } from '../store';
+import { MAIN_GALLERY_SAVED_TABLE_PLACEMENTS } from '../data/mainGalleryReplacementArtworks';
 
 const MAIN_GALLERY_PREVIEW_URL = '/assets/previews/main-gallery-preview.png';
 
@@ -168,9 +169,12 @@ export function UIOverlay() {
   const setPortalSurfaceTuning = useGalleryStore((s) => s.setPortalSurfaceTuning);
   const portalWorldTuning = useGalleryStore((s) => s.portalWorldTuning);
   const setPortalWorldTuning = useGalleryStore((s) => s.setPortalWorldTuning);
+  const tableau9WorldTuning = useGalleryStore((s) => s.tableau9WorldTuning);
+  const setTableau9WorldTuning = useGalleryStore((s) => s.setTableau9WorldTuning);
   const galleryFloorTuning = useGalleryStore((s) => s.galleryFloorTuning);
   const setGalleryFloorTuning = useGalleryStore((s) => s.setGalleryFloorTuning);
   const infernoPortalEnabled = useGalleryStore((s) => s.infernoPortalEnabled);
+  const tableau9PortalEnabled = useGalleryStore((s) => s.tableau9PortalEnabled);
   const resetGalleryTuning = useGalleryStore((s) => s.resetGalleryTuning);
   const [presetStatus, setPresetStatus] = useState('');
 
@@ -220,6 +224,14 @@ export function UIOverlay() {
     });
   };
 
+  const updateTableau9WorldVector = (key: 'position' | 'rotation', index: number, value: number) => {
+    setTableau9WorldTuning((prev) => {
+      const next = [...prev[key]] as [number, number, number];
+      next[index] = value;
+      return { ...prev, [key]: next };
+    });
+  };
+
   const updateFloorVector = (key: 'repeat' | 'offset', index: number, value: number) => {
     setGalleryFloorTuning((prev) => {
       const next = [...prev[key]] as [number, number];
@@ -240,6 +252,12 @@ export const DEFAULT_PORTAL_WORLD_TUNING = {
   rotation: ${formatPresetVector(portalWorldTuning.rotation)},
 };
 
+export const DEFAULT_TABLEAU_9_WORLD_TUNING = {
+  scaleMultiplier: ${formatPresetNumber(tableau9WorldTuning.scaleMultiplier)},
+  position: ${formatPresetVector(tableau9WorldTuning.position)},
+  rotation: ${formatPresetVector(tableau9WorldTuning.rotation)},
+};
+
 export const DEFAULT_GALLERY_FLOOR_TUNING = {
   repeat: [${formatPresetNumber(galleryFloorTuning.repeat[0])}, ${formatPresetNumber(galleryFloorTuning.repeat[1])}],
   offset: [${formatPresetNumber(galleryFloorTuning.offset[0])}, ${formatPresetNumber(galleryFloorTuning.offset[1])}],
@@ -247,13 +265,14 @@ export const DEFAULT_GALLERY_FLOOR_TUNING = {
   normalScale: ${formatPresetNumber(galleryFloorTuning.normalScale)},
 };
 
-export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};`;
+export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};
+export const DEFAULT_TABLEAU_9_PORTAL_ENABLED = ${tableau9PortalEnabled};`;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6">
       <div className="relative z-10 flex items-start justify-between">
         <div className="text-white">
-          <h1 className="text-2xl font-bold tracking-tighter">Gallery3d</h1>
+          <h1 className="text-2xl font-bold tracking-tighter">Galerie3d</h1>
           <p className="text-sm text-gray-400">
             {isEditorMode
               ? 'Mode edition: ZQSD avancer, Espace monter, Shift descendre, Tab pour liberer la souris, cliquez pour regarder'
@@ -348,6 +367,32 @@ export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};`;
 
           <div className="mt-4 space-y-4">
             <section className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Tableaux actifs</p>
+                <div className="space-y-2 text-xs text-white/70">
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="font-medium text-white">Inferno World</p>
+                    <p className="mt-1 text-white/55">Objet: jake_and_london_eye_london_eye_manual_bake_0</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="font-medium text-white">Hornet</p>
+                    <p className="mt-1 text-white/55">Objet: jakeframe_jake_manua_bake_0</p>
+                  </div>
+                </div>
+              </section>
+
+            <section className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Emplacements Memorises</p>
+              <div className="space-y-2 text-xs text-white/70">
+                {MAIN_GALLERY_SAVED_TABLE_PLACEMENTS.map(({ anchorName, note }) => (
+                  <div key={anchorName} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="font-medium text-white">{anchorName}</p>
+                    <p className="mt-1 text-white/55">{note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Surface portail</p>
               <div className="space-y-2">
                 <NumericField label="Scale X" value={portalSurfaceTuning.scale[0]} step={0.25} onChange={(value) => updateSurfaceVector('scale', 0, value)} />
@@ -380,6 +425,59 @@ export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};`;
                 <NumericField label="Rot X" value={portalWorldTuning.rotation[0]} step={0.25} onChange={(value) => updateWorldVector('rotation', 0, value)} />
                 <NumericField label="Rot Y" value={portalWorldTuning.rotation[1]} step={0.25} onChange={(value) => updateWorldVector('rotation', 1, value)} />
                 <NumericField label="Rot Z" value={portalWorldTuning.rotation[2]} step={0.25} onChange={(value) => updateWorldVector('rotation', 2, value)} />
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <p className="mb-1 text-xs font-bold uppercase tracking-[0.25em] text-white/65">Modèle hornet</p>
+              <p className="mb-3 text-[11px] leading-4 text-white/45">Ajuste seulement le personnage, la salle reste fixe.</p>
+              <div className="space-y-2">
+                <NumericField
+                  label="Scale Mul"
+                  value={tableau9WorldTuning.scaleMultiplier}
+                  step={0.25}
+                  onChange={(value) => setTableau9WorldTuning((prev) => ({ ...prev, scaleMultiplier: value }))}
+                />
+              </div>
+              <div className="mt-3 space-y-2">
+                <NumericField
+                  label="Pos X"
+                  value={tableau9WorldTuning.position[0]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('position', 0, value)}
+                />
+                <NumericField
+                  label="Pos Y"
+                  value={tableau9WorldTuning.position[1]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('position', 1, value)}
+                />
+                <NumericField
+                  label="Pos Z"
+                  value={tableau9WorldTuning.position[2]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('position', 2, value)}
+                />
+              </div>
+              <div className="mt-3 space-y-2">
+                <NumericField
+                  label="Rot X"
+                  value={tableau9WorldTuning.rotation[0]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('rotation', 0, value)}
+                />
+                <NumericField
+                  label="Rot Y"
+                  value={tableau9WorldTuning.rotation[1]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('rotation', 1, value)}
+                />
+                <NumericField
+                  label="Rot Z"
+                  value={tableau9WorldTuning.rotation[2]}
+                  step={0.25}
+                  onChange={(value) => updateTableau9WorldVector('rotation', 2, value)}
+                />
               </div>
             </section>
 
@@ -424,7 +522,7 @@ export const DEFAULT_INFERNO_PORTAL_ENABLED = ${infernoPortalEnabled};`;
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/35" />
             </div>
             <div className="flex max-w-xl flex-col justify-center px-8 py-8">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.35em] text-white/50">Gallery3d</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.35em] text-white/50">Galerie3d</p>
               <h2 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl">Salle principale</h2>
               <p className="mb-5 text-sm leading-relaxed text-gray-300">
                 Cette version du site charge une seule map jouable, issue du GLB principal du projet. L&apos;ancienne logique multi-salles a ete retiree pour garder une structure plus claire.
