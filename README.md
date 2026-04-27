@@ -15,6 +15,25 @@ Nom de l'application: Gallerie3d
 
 1. Installer les dependances:
    `npm install`
-2. Definir `GEMINI_API_KEY` dans [.env.local](.env.local) avec votre cle API Gemini
-3. Lancer l'application:
-   `npm run dev`
+2. Verifier les variables dans `.env`
+3. Initialiser la base:
+   `npm run db:push`
+4. Seeder la base:
+   `npm run db:seed`
+5. Lancer client + API:
+   <!-- `npm run dev` -->
+
+## Comptes seedes
+
+- Moderator: `moderator@gallery3d.local` / `moderator123`
+- Collector: `collector@gallery3d.local` / `collector123`
+- Artistes seedes: mot de passe `artist123`
+
+## Achat simule
+
+Le projet utilise maintenant une simulation complete de l achat.
+
+- pas de configuration Stripe requise
+- le checkout cree une commande locale
+- le stock reserve est converti en stock vendu
+- l historique des commandes est visible dans `/account`

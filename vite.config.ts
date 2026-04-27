@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
       // HMR can be disabled via DISABLE_HMR env var.
       // File watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
+      proxy: {
+        '/api': 'http://localhost:3001',
+        '/uploads': 'http://localhost:3001',
+      },
     },
   };
 });

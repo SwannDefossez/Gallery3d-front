@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ARTIST
+  MODERATOR
+}
+
+enum ArtworkStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  HIDDEN
+}
+
+enum ArtistRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  CHECKOUT_PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+  FAILED
+}
+
+model User {
+  id                     String          @id @default(cuid())
+  name                   String
+  email                  String          @unique
+  passwordHash           String
+  role                   Role            @default(USER)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  artistProfile          ArtistProfile?
+  cart                   Cart?
+  orders                 Order[]
+  artistRequests         ArtistRequest[]
+  reviewedArtistRequests ArtistRequest[] @relation("ArtistRequestReviewedBy")
+}
+
+model ArtistProfile {
+  id           String      @id @default(cuid())
+  userId       String      @unique
+  displayName  String
+  bio          String      @default("")
+  portfolioUrl String?
+  avatarPath   String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artworks     Artwork[]
+  orderItems   OrderItem[]
+}
+
+model ArtistRequest {
+  id               String              @id @default(cuid())
+  userId           String
+  motivation       String
+  status           ArtistRequestStatus @default(PENDING)
+  createdAt        DateTime            @default(now())
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedByUser   User?               @relation("ArtistRequestReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+}
+
+model Artwork {
+  id                    String         @id
+  legacyId              String         @unique
+  slug                  String         @unique
+  galleryKey            String
+  debugNumber           Int
+  title                 String
+  artistNameSnapshot    String
+  description           String?
+  priceCents            Int
+  stockTotal            Int
+  stockReserved         Int            @default(0)
+  stockSold             Int            @default(0)
+  status                ArtworkStatus  @default(DRAFT)
+  imagePath             String
+  sceneTexturePath      String?
+  modelUrl              String?
+  sourceNodeName        String?
+  sceneTextureScaleX    Float?
+  sceneTextureScaleY    Float?
+  previewAspectRatio    Float?
+  previewSourceRatio    Float?
+  previewObjectPosition String?
+  previewZoom           Float?
+  previewFlipY          Boolean        @default(false)
+  positionX             Float
+  positionY             Float
+  positionZ             Float
+  rotationX             Float
+  rotationY             Float
+  rotationZ             Float
+  width                 Float
+  height                Float
+  hitboxX               Float
+  hitboxY               Float
+  hitboxZ               Float
+  debugLabelOffsetX     Float?
+  debugLabelOffsetY     Float?
+  debugLabelOffsetZ     Float?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  artistProfileId       String?
+  artistProfile         ArtistProfile? @relation(fields: [artistProfileId], references: [id], onDelete: SetNull)
+  cartItems             CartItem[]
+  orderItems            OrderItem[]
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id             String   @id @default(cuid())
+  cartId         String
+  artworkId      String
+  quantity       Int
+  unitPriceCents Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  cart           Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  artwork        Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, artworkId])
+}
+
+model Order {
+  id                      String      @id @default(cuid())
+  userId                  String
+  status                  OrderStatus
+  totalCents              Int
+  stripeCheckoutSessionId String?     @unique
+  stripePaymentIntentId   String?
+  reservationExpiresAt    DateTime?
+  paidAt                  DateTime?
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  user                    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                   OrderItem[]
+}
+
+model OrderItem {
+  id                String         @id @default(cuid())
+  orderId           String
+  artworkId         String
+  artistProfileId   String?
+  titleSnapshot     String
+  imagePathSnapshot String
+  quantity          Int
+  unitPriceCents    Int
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  artwork           Artwork        @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  artistProfile     ArtistProfile? @relation(fields: [artistProfileId], references: [id], onDelete: SetNull)
+}
