@@ -34,7 +34,7 @@ export function ArtistDashboardPage() {
   }, []);
 
   return (
-    <PageShell title="Espace artiste" subtitle="Gere ton profil, ton inventaire et les soumissions a moderation.">
+    <PageShell title="Espace artiste" subtitle="Gestion du profil, de l inventaire et des soumissions a moderation.">
       {error ? <p className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">

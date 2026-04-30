@@ -13,7 +13,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <PageShell title="Connexion" subtitle="Accede au paiement, a ton compte et aux espaces prives.">
+    <PageShell title="Connexion" subtitle="Acces au paiement, au compte et aux espaces prives.">
       <div className="max-w-xl rounded-3xl border border-white/10 bg-white/5 p-6">
         <form
           className="space-y-4"

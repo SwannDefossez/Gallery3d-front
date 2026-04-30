@@ -41,7 +41,7 @@ export function AccountPage() {
   }, []);
 
   return (
-    <PageShell title="Compte" subtitle="Gere ton acces client, ton role et tes espaces prives.">
+    <PageShell title="Compte" subtitle="Gestion de l acces client, du role et des espaces prives.">
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Profil</p>
@@ -91,7 +91,7 @@ export function AccountPage() {
               <textarea
                 name="motivation"
                 className="min-h-40 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-amber-400/60"
-                placeholder="Explique ton univers, ton experience et pourquoi tu veux un espace artiste."
+                placeholder="Presenter l univers artistique, l experience et les motivations pour obtenir un espace artiste."
                 required
               />
               {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
